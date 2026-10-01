@@ -32,19 +32,20 @@ This document addresses common questions and issues encountered by users, contri
 19. [How do I receive webhook notifications for stream events?](#how-do-i-receive-webhook-notifications-for-stream-events)
 20. [How do I verify a webhook signature?](#how-do-i-verify-a-webhook-signature)
 21. [How do I run the full project locally?](#how-do-i-run-the-full-project-locally)
-22. [How do I run tests?](#how-do-i-run-tests)
-23. [How do I update contract bindings?](#how-do-i-update-contract-bindings)
-24. [How do I change the allowed assets?](#how-do-i-change-the-allowed-assets)
-25. [How do I generate a JWT secret?](#how-do-i-generate-a-jwt-secret)
+22. [How do I run the backend without Stellar credentials?](#how-do-i-run-the-backend-without-stellar-credentials)
+23. [How do I run tests?](#how-do-i-run-tests)
+24. [How do I update contract bindings?](#how-do-i-update-contract-bindings)
+25. [How do I change the allowed assets?](#how-do-i-change-the-allowed-assets)
+26. [How do I generate a JWT secret?](#how-do-i-generate-a-jwt-secret)
 
 **Troubleshooting**
-26. [Why is my stream not updating in the dashboard?](#why-is-my-stream-not-updating-in-the-dashboard)
-27. [Why is my claim transaction failing?](#why-is-my-claim-transaction-failing)
-28. [Why is the indexer lagging behind the chain?](#why-is-the-indexer-lagging-behind-the-chain)
-29. [Why is the indexer circuit breaker open?](#why-is-the-indexer-circuit-breaker-open)
-30. [Why aren't my webhooks arriving?](#why-arent-my-webhooks-arriving)
-31. [How do I debug WebSocket/live-update issues?](#how-do-i-debug-websocketlive-update-issues)
-32. [How do I reset the database?](#how-do-i-reset-the-database)
+27. [Why is my stream not updating in the dashboard?](#why-is-my-stream-not-updating-in-the-dashboard)
+28. [Why is my claim transaction failing?](#why-is-my-claim-transaction-failing)
+29. [Why is the indexer lagging behind the chain?](#why-is-the-indexer-lagging-behind-the-chain)
+30. [Why is the indexer circuit breaker open?](#why-is-the-indexer-circuit-breaker-open)
+31. [Why aren't my webhooks arriving?](#why-arent-my-webhooks-arriving)
+32. [How do I debug WebSocket/live-update issues?](#how-do-i-debug-websocketlive-update-issues)
+33. [How do I reset the database?](#how-do-i-reset-the-database)
 
 ---
 
@@ -150,6 +151,34 @@ npm run dev:backend
 npm run dev:frontend
 ```
 Both commands start long-running dev servers, so run them in separate terminals. See the [README.md](README.md#6-run-locally) for Docker Compose and manual setup alternatives.
+
+### How do I run the backend without Stellar credentials?
+This is the recommended starting point for new contributors who haven't deployed a contract yet (frontend work, API development, running tests).
+
+1. Copy the example env file:
+   ```bash
+   cp backend/.env.example backend/.env
+   ```
+2. Uncomment (or add) `SOROBAN_DISABLED=true` in `backend/.env`:
+   ```
+   SOROBAN_DISABLED=true
+   ```
+3. Start the backend:
+   ```bash
+   npm run dev:backend
+   ```
+
+What works in this mode:
+- All REST API endpoints (streams, webhooks, events, stats).
+- WebSocket real-time updates.
+- JWT authentication (uses an ephemeral secret that resets on restart).
+- All backend unit and integration tests (`cd backend && npm test`).
+
+What doesn't work:
+- On-chain stream operations (claim, create, cancel) — these require a deployed contract.
+- The event indexer will not start (no `CONTRACT_ID` to watch).
+
+Once you have a deployed contract, remove `SOROBAN_DISABLED=true` and set `CONTRACT_ID` and `SERVER_PRIVATE_KEY` in your `.env`. See [CONTRIBUTING.md](CONTRIBUTING.md) for the full Soroban local testnet setup.
 
 ### How do I run tests?
 - **Backend:** `cd backend && npm test`. See [TESTING.md](backend/TESTING.md) for integration test details.
